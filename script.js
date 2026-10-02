@@ -1,26 +1,44 @@
-// Simulerad blockering av tråden
-setInterval(() => {
-    let start = Date.now()
-    while (Date.now() - start < 1000) {}
-  }, 3000)
-  
-  // Förhindrar användaren att navigera bakåt
-  history.pushState(null, "", location.href)
-  window.onpopstate = () => history.go(1)
-  
-  // Visar innehållet på sidan efter 5 sekunder
-  setTimeout(() => {
-    document.body.style.display = "block"
-  }, 5000)
-  
-  // Loggar 10000 tal till konsolen efter 1 sekund
-  setTimeout(() => {
-    for (let i = 0; i < 10000; i++) {
-      console.log(i)
-    }
-  }, 1000)
-  
-  // Loggar 100 000 siffror direkt när sidan laddas
-  for (let i = 0; i < 100000; i++) {
-    console.log(i)
+// Vase Vista - script.js
+//
+// The original script blocked the main thread for a full second every
+// third second, trapped the browser back button, delayed the page by
+// five seconds and logged 110 000 lines to the console. All of that is
+// gone. What remains is small, event-driven and non-blocking:
+// the product filter and the newsletter form.
+
+// ---- Product category filter ----
+const filterButtons = document.querySelectorAll('.filter-btn');
+const productCards = document.querySelectorAll('.product-card');
+
+filterButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    const filter = button.dataset.filter;
+
+    filterButtons.forEach((btn) => {
+      const isActive = btn === button;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-pressed', String(isActive));
+    });
+
+    productCards.forEach((card) => {
+      card.hidden = filter !== 'all' && card.dataset.category !== filter;
+    });
+  });
+});
+
+// ---- Newsletter form ----
+const form = document.querySelector('.newsletter-form');
+const emailInput = document.getElementById('email');
+const formMessage = document.getElementById('form-message');
+
+form.addEventListener('submit', (event) => {
+  event.preventDefault();
+
+  if (emailInput.value.trim() === '' || !emailInput.checkValidity()) {
+    formMessage.textContent = 'Please enter a valid email address.';
+    return;
   }
+
+  formMessage.textContent = 'Thank you for subscribing! A welcome email is on its way.';
+  form.reset();
+});
